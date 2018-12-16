@@ -11,6 +11,19 @@ def main():
         return
     
     sticker_id = sys.argv[1]
+    
+    r = create_line_sticker_request(sticker_id)
+    store_path = create_storage_directory(sticker_id)
+    images_spans = parse_image_parts(r.text)
+    
+    image_index = 1
+    for image in images_spans:
+        match = re.search(r"https:.*\.png", image['style'], re.M)
+        download_image(match.group(0), 'image' + str(image_index), store_path)
+        image_index += 1
+
+def create_line_sticker_request(sticker_id):
+    sticker_id = sys.argv[1]
     sticker_url = 'https://store.line.me/stickershop/product/' + sticker_id + '/zh-Hant'
     firefox_headers = {
         'Accept-Encoding': 'gzip, deflate, br',
@@ -21,17 +34,7 @@ def main():
         'TE': 'Trailers',
         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:63.0) Gecko/20100101 Firefox/63.0'
     }
-    r = requests.get(sticker_url, headers = firefox_headers)
-    
-    store_path = create_storage_directory(sticker_id)
-    soup = BeautifulSoup(r.text, 'html.parser')
-
-    images_span = soup.find_all("span", attrs={"class": "mdCMN09Image"})
-    image_index = 1
-    for image in images_span:
-        match = re.search(r"https:.*\.png", image['style'], re.M)
-        download_image(match.group(0), 'image' + str(image_index), store_path)
-        image_index += 1
+    return requests.get(sticker_url, headers = firefox_headers)
 
 def create_storage_directory(directory_name):
     directory_path = "./" + directory_name
@@ -39,14 +42,17 @@ def create_storage_directory(directory_name):
         remove_directory(directory_path)
     os.mkdir(directory_path)
     return directory_path
-        
-
+     
 def remove_directory(directory_path):
     for file in os.listdir(directory_path): 
         file_path = os.path.join(directory_path, file)
         if os.path.isfile(file_path):
             os.remove(file_path)
     os.rmdir(directory_path)
+
+def parse_image_parts(html):
+    soup = BeautifulSoup(html, 'html.parser')
+    return soup.find_all("span", attrs={"class": "mdCMN09Image"})
 
 def download_image(image_url, image_index, store_path):
     file_path = os.path.join(store_path, image_index + '.png')

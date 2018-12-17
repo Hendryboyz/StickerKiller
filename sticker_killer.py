@@ -2,8 +2,8 @@ import requests
 import sys
 import re
 import os
-from PIL import Image
 from bs4 import BeautifulSoup
+# from PIL import Image
 
 def main():
     if len(sys.argv) == 1:
@@ -56,7 +56,6 @@ def parse_image_parts(html):
 
 def download_image(image_url, image_index, store_path):
     file_path = os.path.join(store_path, image_index + '.png')
-    print(file_path)
 
     with open(file_path, 'wb') as handle:
         response = requests.get(image_url, stream=True)
@@ -67,7 +66,6 @@ def download_image(image_url, image_index, store_path):
         for block in response.iter_content(1024):
             if not block:
                 break
-
             handle.write(block)
 
     print(image_url + ' - OK')

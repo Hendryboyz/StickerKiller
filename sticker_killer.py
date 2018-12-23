@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 
 def main():
     if len(sys.argv) == 1:
-        print("ERROR : Sticker not found")
+        print("ERROR : Sticker ID not found")
         return
     
     sticker_id = sys.argv[1]
@@ -37,12 +37,18 @@ def create_line_sticker_request(sticker_id):
     return requests.get(sticker_url, headers = firefox_headers)
 
 def create_storage_directory(directory_name):
-    directory_path = "./" + directory_name
+    create_image_directory()
+    directory_path = "./image/" + directory_name
     if (os.path.isdir(directory_path)):
         remove_directory(directory_path)
     os.mkdir(directory_path)
     return directory_path
-     
+
+def create_image_directory():
+    image_dir_path = "./image"
+    if (not os.path.isdir(image_dir_path)):
+        os.mkdir(image_dir_path)
+
 def remove_directory(directory_path):
     for file in os.listdir(directory_path): 
         file_path = os.path.join(directory_path, file)
@@ -55,20 +61,28 @@ def parse_image_parts(html):
     return soup.find_all("span", attrs={"class": "mdCMN09Image"})
 
 def download_image(image_url, image_index, store_path):
+    response = getImageResource(image_url)
+    if (response is None):
+        print(image_url + ' - Failed')
+        return
+
     file_path = os.path.join(store_path, image_index + '.png')
-
     with open(file_path, 'wb') as handle:
-        response = requests.get(image_url, stream=True)
-
-        if not response.ok:
-            print(response)
-
         for block in response.iter_content(1024):
             if not block:
                 break
             handle.write(block)
-
     print(image_url + ' - OK')
+
+def getImageResource(image_url):
+    animation_image_url = re.sub(r'\/ANDROID\/sticker', '/IOS/sticker_animation@2x', image_url)
+    response = requests.get(animation_image_url, stream=True)
+    if not response.ok:
+        response = requests.get(image_url, stream=True)
+    if not response.ok:
+        print(response)
+        return None
+    return response
 
 if __name__ == '__main__':
     main()

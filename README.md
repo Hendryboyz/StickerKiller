@@ -1,5 +1,5 @@
 ## Usage
-    python sticker_killer.py <sticker_id> [-d destination_directory]
+    python sticker_killer.py <sticker_id>
 
 ## Dependency
 * [requests](http://docs.python-requests.org/en/master/)
